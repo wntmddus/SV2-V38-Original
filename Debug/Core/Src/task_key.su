@@ -1,0 +1,4 @@
+../Core/Src/task_key.c:89:6:Debounce	32	static
+../Core/Src/task_key.c:120:6:DebouncePower	32	static
+../Core/Src/task_key.c:162:6:StartTask03	32	static
+../Core/Src/task_key.c:274:6:power_off_mode	8	static

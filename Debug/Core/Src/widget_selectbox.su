@@ -1,0 +1,5 @@
+../Core/Src/widget_selectbox.c:22:6:selectbox_KEY_handler	40	static
+../Core/Src/widget_selectbox.c:52:13:set_opt_val_sel	56	static
+../Core/Src/widget_selectbox.c:63:13:selectbox_command_handler	24	static
+../Core/Src/widget_selectbox.c:107:13:draw	48	static
+../Core/Src/widget_selectbox.c:118:6:app_widget_launch_selectbox	40	static

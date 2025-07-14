@@ -1,0 +1,9 @@
+../Core/Src/widget_ftp.c:34:13:set_opt_sel	40	static
+../Core/Src/widget_ftp.c:45:20:GetOptText	32	static
+../Core/Src/widget_ftp.c:65:6:opt_ftp_win_KEY_handler	40	static
+../Core/Src/widget_ftp.c:107:13:ftp_exit	8	static
+../Core/Src/widget_ftp.c:124:13:widget_opt_ftp_command_handler	56	static
+../Core/Src/widget_ftp.c:273:13:draw_static	96	static
+../Core/Src/widget_ftp.c:313:6:app_widget_launch_opt_ftp	16	static
+../Core/Src/widget_ftp.c:328:13:set_text	56	static
+../Core/Src/widget_ftp.c:356:6:app_widget_launch_ftp_back	160	static

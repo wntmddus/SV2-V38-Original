@@ -1,0 +1,2 @@
+../Core/Src/os_spi.c:17:9:os_spi_write	1
+../Core/Src/os_spi.c:42:9:os_spi_read	2

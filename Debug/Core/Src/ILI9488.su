@@ -1,0 +1,10 @@
+../Core/Src/ILI9488.c:25:6:ILI9488_WriteCommand	16	static
+../Core/Src/ILI9488.c:33:6:ILI9488_DataWrite	16	static
+../Core/Src/ILI9488.c:38:6:ILI9488_WriteDataBig	16	static
+../Core/Src/ILI9488.c:46:6:ILI9488_WriteDataSmall	24	static
+../Core/Src/ILI9488.c:61:6:ILI9488_SetAddressWindow	24	static
+../Core/Src/ILI9488.c:81:6:ILI9488_Reset	8	static
+../Core/Src/ILI9488.c:89:6:ILI9488_Init	48	static
+../Core/Src/ILI9488.c:184:6:ILI9488_FillRectangle	40	static
+../Core/Src/ILI9488.c:209:6:ILI9488_DrawImage	40	static
+../Core/Src/ILI9488.c:235:6:ILI9488_WriteString	64	static

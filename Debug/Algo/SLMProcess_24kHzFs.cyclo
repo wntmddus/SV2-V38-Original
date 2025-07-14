@@ -1,0 +1,9 @@
+../Algo/SLMProcess_24kHzFs.c:41:6:InitSLMProcess	20
+../Algo/SLMProcess_24kHzFs.c:231:6:SoundUpdateCounters	3
+../Algo/SLMProcess_24kHzFs.c:255:6:SLMProcess	3
+../Algo/SLMProcess_24kHzFs.c:294:6:Sound_TriggerFound_ResetAlgo	4
+../Algo/SLMProcess_24kHzFs.c:355:6:SoundWeighting	17
+../Algo/SLMProcess_24kHzFs.c:510:6:SoundRMSDetector	2
+../Algo/SLMProcess_24kHzFs.c:550:6:SoundConvertUnit	2
+../Algo/SLMProcess_24kHzFs.c:575:6:SoundMaxMinDetector	3
+../Algo/SLMProcess_24kHzFs.c:589:6:SoundAccumulateDetector	1

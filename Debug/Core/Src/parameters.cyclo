@@ -1,0 +1,2 @@
+../Core/Src/parameters.c:134:6:writetobackup	1
+../Core/Src/parameters.c:142:6:readfrombackup	1

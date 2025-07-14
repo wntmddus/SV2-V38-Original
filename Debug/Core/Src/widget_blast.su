@@ -1,0 +1,8 @@
+../Core/Src/widget_blast.c:27:6:blast_win_KEY_handler	40	static
+../Core/Src/widget_blast.c:59:13:widget_blast_command_handler	16	static
+../Core/Src/widget_blast.c:96:6:app_widget_launch_blast	16	static
+../Core/Src/widget_blast.c:113:6:draw_blast_static	24	static
+../Core/Src/widget_blast.c:126:6:draw_blast_update	32	static
+../Core/Src/widget_blast.c:147:6:DrawGrid_bls	72	static
+../Core/Src/widget_blast.c:198:6:DrawInGrid_bls	96	static
+../Core/Src/widget_blast.c:221:6:ini_bls_algo	16	static

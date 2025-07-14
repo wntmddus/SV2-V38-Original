@@ -1,0 +1,4 @@
+../Core/Src/fonts.c:386:6:create_battery_icons	1
+../Core/Src/fonts.c:395:6:create_batt	15
+../Core/Src/fonts.c:488:6:create_SD_icons	1
+../Core/Src/fonts.c:494:6:create_SD_icon	18

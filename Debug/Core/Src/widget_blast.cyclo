@@ -1,0 +1,8 @@
+../Core/Src/widget_blast.c:27:6:blast_win_KEY_handler	7
+../Core/Src/widget_blast.c:59:13:widget_blast_command_handler	7
+../Core/Src/widget_blast.c:96:6:app_widget_launch_blast	1
+../Core/Src/widget_blast.c:113:6:draw_blast_static	1
+../Core/Src/widget_blast.c:126:6:draw_blast_update	5
+../Core/Src/widget_blast.c:147:6:DrawGrid_bls	5
+../Core/Src/widget_blast.c:198:6:DrawInGrid_bls	3
+../Core/Src/widget_blast.c:221:6:ini_bls_algo	2

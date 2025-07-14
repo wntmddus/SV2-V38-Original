@@ -1,0 +1,9 @@
+../Core/Src/widget_opt_rec.c:42:20:GetOptText	88	static
+../Core/Src/widget_opt_rec.c:57:13:getDefValIndex	16	static
+../Core/Src/widget_opt_rec.c:76:13:set_opt_sel	40	static
+../Core/Src/widget_opt_rec.c:87:13:set_opt_val_sel	40	static
+../Core/Src/widget_opt_rec.c:94:13:record_exit	8	static
+../Core/Src/widget_opt_rec.c:111:6:opt_rec_win_KEY_handler	40	static
+../Core/Src/widget_opt_rec.c:154:13:widget_opt_rec_command_handler	32	static
+../Core/Src/widget_opt_rec.c:267:13:draw_static	32	static
+../Core/Src/widget_opt_rec.c:303:6:app_widget_launch_opt_rec	16	static

@@ -1,0 +1,7 @@
+../Core/Src/widget_menu_main.c:29:13:set_opt_sel_menu	40	static
+../Core/Src/widget_menu_main.c:38:13:menu_indx0_sel	24	static
+../Core/Src/widget_menu_main.c:66:6:menu_main_win_KEY_handler	40	static
+../Core/Src/widget_menu_main.c:96:13:main_menu_exit	8	static
+../Core/Src/widget_menu_main.c:116:13:widget_menu_main_command_handler	32	static
+../Core/Src/widget_menu_main.c:303:13:draw_menu_main_static	24	static
+../Core/Src/widget_menu_main.c:328:6:app_widget_launch_menu_main	16	static

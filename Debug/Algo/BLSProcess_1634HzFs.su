@@ -1,0 +1,5 @@
+../Algo/BLSProcess_1634HzFs.c:75:7:intBLSProcess	32	static
+../Algo/BLSProcess_1634HzFs.c:111:7:BLSProcess	128	static
+../Algo/BLSProcess_1634HzFs.c:582:8:ZeroCrossingFrequency	32	static
+../Algo/BLSProcess_1634HzFs.c:610:8:ResetBLSAlgo	32	static
+../Algo/BLSProcess_1634HzFs.c:706:8:LnDetectorCalledFromBLS	64	static

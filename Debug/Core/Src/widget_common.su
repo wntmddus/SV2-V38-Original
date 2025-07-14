@@ -1,0 +1,10 @@
+../Core/Src/widget_common.c:41:20:GetOptText	16	static
+../Core/Src/widget_common.c:58:13:set_opt_sel	40	static
+../Core/Src/widget_common.c:69:13:set_opt_val_sel	40	static
+../Core/Src/widget_common.c:76:13:common_exit	8	static
+../Core/Src/widget_common.c:93:6:opt_common_win_KEY_handler	40	static
+../Core/Src/widget_common.c:137:13:widget_opt_common_command_handler	88	static
+../Core/Src/widget_common.c:331:13:draw_static	96	static
+../Core/Src/widget_common.c:420:6:app_widget_launch_opt_common	16	static
+../Core/Src/widget_common.c:435:13:set_text	56	static
+../Core/Src/widget_common.c:456:6:app_widget_launch_common_back	40	static

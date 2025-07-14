@@ -1,0 +1,3 @@
+../Core/Src/wavefile.c:39:9:create_header	11
+../Core/Src/wavefile.c:150:9:update_header	4
+../Core/Src/wavefile.c:186:9:write_result	14

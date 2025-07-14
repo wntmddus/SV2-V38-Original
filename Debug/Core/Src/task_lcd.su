@@ -1,0 +1,9 @@
+../Core/Src/task_lcd.c:314:6:DrawSD	16	static
+../Core/Src/task_lcd.c:323:6:draw_rec_time	64	static
+../Core/Src/task_lcd.c:338:6:set_rec_button	24	static
+../Core/Src/task_lcd.c:362:6:refresh_system_time	80	static
+../Core/Src/task_lcd.c:396:6:draw_battery	40	static
+../Core/Src/task_lcd.c:471:6:StartTask02	280	static
+../Core/Src/task_lcd.c:642:13:win_process_events	40	static
+../Core/Src/task_lcd.c:662:6:set_special_mode_status	16	static
+../Core/Src/task_lcd.c:673:10:get_special_mode_status	16	static

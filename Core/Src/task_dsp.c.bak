@@ -1,0 +1,1200 @@
+/**
+ * \file
+ *
+ */
+
+#include "main.h"
+#include "cmsis_os.h"
+#include <string.h>
+#include "parameters.h"
+#include "ad7124.h"
+#include "ad7124_regs.h"
+#include "printf.h"
+#include "arm_math.h"
+//#include "sd.h"
+/* FatFs includes component */
+#include "ff_gen_drv.h"
+#include "bsp_driver_sd.h"
+#include "fatfs.h"
+
+#define SSC_MEM_SIZE		(VIB_BUFFER_SIZE*2*3)
+
+#define LENGTH_SAMPLES  SSC_BUFFER_SIZE
+
+/** Receiver buffer content. */
+//memory - here is twice(ping-pong)  - these are data from adc
+//__attribute__((__aligned__(4), __section__(".data_TCM")))
+/*
+__attribute__((__aligned__(32),  __section__(".buf20"))) static uint32_t adc_rx_buff[11][SSC_MEM_SIZE];
+
+__attribute__((__aligned__(32),  __section__(".buf20")))
+static int32_t vib1_rx_buff[SSC_BUFFER_SIZE];		//
+
+__attribute__((__aligned__(32),  __section__(".buf20")))
+static int32_t vib2_rx_buff[SSC_BUFFER_SIZE];		//
+
+__attribute__((__aligned__(32),  __section__(".buf20")))
+static int32_t vib3_rx_buff[SSC_BUFFER_SIZE];		//
+
+__attribute__((__aligned__(32),  __section__(".buf20")))
+static uint16_t sound_rx_buff[SSC_BUFFER_SIZE];		// 1 buffers (short type) for 1 audio channel
+*/
+//__attribute__((__aligned__(32),  __section__(".buf20")))
+static int16_t sd_rx_buff[300*3];		// 3 buffers  for 3 vibro channels after 4 decimation
+
+
+
+/* Private define ------------------------------------------------------------*/
+#define ENAB true
+enum {
+  TRANSFER_WAIT,
+  TRANSFER_COMPLETE,
+  TRANSFER_ERROR
+};
+
+#define AD7124_CHANNEL_COUNT 3
+
+
+/* Private variables ---------------------------------------------------------*/
+struct ad7124_dev *dev = &ad7124_device;
+int32_t reti;
+uint32_t		timeout = 1000;	/* Number of tries before a function times out */
+int32_t			sample;		/* Stores raw value read from the ADC */
+uint8_t setup_index;
+uint8_t ch_index;
+int32_t	error_spi1;
+
+int32_t	doutrdy = 0;
+int32_t	tg = 0;
+uint32_t reg_test1 = 10;
+
+/* Buffer used for transmission */
+const uint32_t aTxBuffer[8] = {0x42000000,0,0,0,0,0,0,0};
+/* Buffer used for reception */
+ALIGN_32BYTES(uint32_t aRxBuffer[8]);
+
+/* transfer state */
+__IO uint32_t wTransferState = TRANSFER_WAIT;
+
+
+int32_t	ch1_samples[2][300];
+int32_t	ch2_samples[2][300];
+int32_t	ch3_samples[2][300];
+int32_t	ping_pong = 0;
+int32_t	 ch_samples_count;
+uint8_t channel_read;
+
+int32_t	count_error;
+
+static uint32_t wavsizeh, wavsize1ch, wavsize3ch;
+struct DateTime dt_dsp;
+
+FIL file_wave3ch;     /* File object */
+FIL Myfile;     /* File object */
+typedef enum {
+  CARD_CONNECTED,
+  CARD_DISCONNECTED,
+  CARD_STATUS_CHANGED,
+}SD_ConnectionStateTypeDef;
+
+extern const Diskio_drvTypeDef  SD_Driver;
+
+uint8_t isInitialized = 0;
+static uint8_t isFsCreated = 0;
+static __IO uint8_t statusChanged = 0;
+
+char cnt_file_name[32]; //,cnt_file_name_3ch[32],cnt_file_name_1ch[32];
+char str_start_rec[32];   //for saving info about start recording for result file
+short m_data_calibr[3][EVS_BUFLEN];
+
+uint8_t workBuffer[2 * _MAX_SS];
+/*
+ * ensure that the read buffer 'rtext' is 32-Byte aligned in address and size
+ * to guarantee that any other data in the cache won't be affected when the 'rtext'
+ * is being invalidated.
+ */
+ALIGN_32BYTES(uint8_t rtext[64]);
+
+int tyu = 0x800000;
+
+/* Private function prototypes -----------------------------------------------*/
+static void PB4EXTI_Init(void);
+void MY_SPI_TxRxCpltCallback();
+static void MY_SPI_CloseTransfer();
+void MY_SPI_ErrorCallback();
+
+extern FRESULT create_header(FIL* file, short nChannels, int nSamplesPerSecond);
+extern FRESULT update_header(FIL* file, short nChannels, DWORD size);
+///static void FS_FileOperations(void);
+static void close_wave_file(void);
+static FRESULT create_files(void);
+
+/**
+ * \brief KEY task core function.
+ *
+ * \param pvParameters Junk parameter.
+ */
+void StartTask01(void *pvParameters)
+{
+	/* Just to avoid compiler warnings. */
+	UNUSED(pvParameters);
+
+	uint32_t redraw_lcd;
+//	int16_t tch1,tch2;
+	uint32_t nbrb, kv; // ks,kv1,kv2,kv3;
+	FRESULT res;
+	unsigned int bw;
+	unsigned int nn = 0;
+	size_t size;
+	uint32_t dat_kol = 0;
+	//uint32_t key_pad=0;
+	//portTickType current_ticks;
+	//timeMutex = xSemaphoreCreateMutex();
+	
+	osEvent event;
+
+	  PB4EXTI_Init();
+
+	  HAL_GPIO_WritePin(GPIOC, AN_POWER_DOWN_Pin, 1);
+
+
+
+///	    if(BSP_SD_IsDetected())
+///	    {
+///	    	osMessageQueuePut(ConnectionEventHandle, CARD_CONNECTED, 0, osWaitForever);
+///	    }
+
+short flag_arm_rec_old;
+short isRecPress;
+bool  isRecToFile=0; //!!! for cont & single rec.modes it's not same to isRecPress
+int file_duration=0, old_file_duration=0;
+//int file_duration3ch=0, old_file_duration3ch=0;
+//	FRESULT result=FR_OK;
+float fDelayForContRec=0.0f;
+
+/* sin for sound -----------------------------------------------*/
+//#define M_PI_2 1.57079
+int jj;
+		  for (int jj = 0; jj < SLM_BUFLEN; jj++)
+		{
+			g_algo.SLMStruct.SLMfeedin[jj] = (short)(16000*sin(M_PI_2*(jj/(float)SLM_BUFLEN)));
+		}
+/* end sin for sound -----------------------------------------------*/
+
+	    if(BSP_SD_IsDetected())
+	    {
+		  /* Register the file system object to the FatFs module */
+		  if(f_mount(&SDFatFS, (TCHAR const*)SDPath, 0) == FR_OK)
+		  {
+
+			  mounted = 1;
+			   /* Create and Open a new text file object with write access */
+			    if(f_open(&Myfile, "STM32_53.txt", FA_OPEN_ALWAYS | FA_WRITE) == FR_OK)
+			    {
+					f_sync(&Myfile);//alex
+					res=create_header(&Myfile,3,SamplFreqVibro);
+			    }
+		  }
+	    }
+
+
+
+
+	  osDelay(1000);
+
+		reti = ad7124_setup(dev); //////
+		if (reti)
+			error_spi1 = 1;
+
+	// Set config 0
+		setup_index = 0;
+
+		reti = setConfigFilter (dev, setup_index, 2, 1, 0, 0, 0);
+		if (reti)
+			error_spi1 = 1;
+		reti = ad7124_set_polarity(dev,1,setup_index); //True in case of Bipolar
+		if (reti)
+			error_spi1 = 1;
+		reti = ad7124_set_reference_source(dev,INTERNAL_REF, setup_index, ENAB); ///////
+		if (reti)
+			error_spi1 = 1;
+		reti = ad7124_enable_buffers(dev,ENAB,ENAB,setup_index); //Enable Input Buffer. Enable reference Buffer.
+		if (reti)
+			error_spi1 = 1;
+	// Config ADC
+		reti = ad7124_set_adc_mode(dev, AD7124_CONTINUOUS);//////
+		if (reti)
+			error_spi1 = 1;
+		reti = ad7124_set_power_mode(dev, AD7124_HIGH_POWER);//////
+		if (reti)
+			error_spi1 = 1;
+	// Set channel 0
+		ch_index = 0;
+
+		reti = ad7124_connect_analog_input(dev, ch_index, AD7124_AIN6, AD7124_DGND);
+		if (reti)
+			error_spi1 = 1;
+
+		reti = ad7124_assign_setup(dev, ch_index, 0); //setup_index = 0;
+		if (reti)
+			error_spi1 = 1;
+
+		reti = ad7124_set_channel_status(dev,ch_index,ENAB);
+		if (reti)
+			error_spi1 = 1;
+
+		// Set channel 1
+			ch_index = 1;
+
+			reti = ad7124_connect_analog_input(dev, ch_index, AD7124_AIN7, AD7124_DGND);
+			if (reti)
+				error_spi1 = 1;
+
+			reti = ad7124_assign_setup(dev, ch_index, 0); //setup_index = 0;
+			if (reti)
+				error_spi1 = 1;
+
+			reti = ad7124_set_channel_status(dev,ch_index,ENAB);
+			if (reti)
+				error_spi1 = 1;
+
+			// Set channel 2
+				ch_index = 2;
+
+				reti = ad7124_connect_analog_input(dev, ch_index, AD7124_AIN8, AD7124_DGND);
+				if (reti)
+					error_spi1 = 1;
+
+				reti = ad7124_assign_setup(dev, ch_index, 0); //setup_index = 0;
+				if (reti)
+					error_spi1 = 1;
+
+				reti = ad7124_set_channel_status(dev,ch_index,ENAB);
+				if (reti)
+					error_spi1 = 1;
+
+		//VBIAS
+		reti = setBiasPins (dev, AD7124_8_IO_CTRL2_REG_GPIO_VBIAS15);
+		if (reti)
+			error_spi1 = 1;
+
+
+		//if(error_spi1 > 0)
+			//HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, 1);
+
+
+		  doutrdy = 0;
+		  while(HAL_NVIC_GetPendingIRQ(EXTI4_IRQn)) {
+		    EXTI->PR1 = (EXTI_PR1_PR4);
+		    HAL_NVIC_ClearPendingIRQ(EXTI4_IRQn);
+		  }
+		  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+
+
+		    /* SPI1 interrupt Init */
+		    HAL_NVIC_SetPriority(SPI1_IRQn, 6, 0);
+		    HAL_NVIC_EnableIRQ(SPI1_IRQn);
+
+		  HAL_GPIO_WritePin(GPIOA, NSSSPI1_Pin, 0);
+
+		  flag_arm_rec_old=flag_arm_rec; //keep previous state of recording/arming
+
+	for (;;) {
+
+		///osDelay(50);
+
+		isRecPress=flag_arm_rec;  //keep in isRecPress, because global var flag_arm_rec can be changed during "while"
+		//check changing of recording state:
+
+		if (isRecPress!=flag_arm_rec_old)  //status is changing: create wave-file of close
+		{
+			//HAL_GPIO_TogglePin(LED0_GPIO_Port, LED0_Pin);
+
+			//manual recording
+			if (isRecPress && g_demo_parameters.opt_rec.nRecordMode ==0)  //start rec->create file
+			{
+				if (create_files()!=FR_OK)
+				{
+					flag_arm_rec=0;
+					isRecToFile=0;
+				}
+				else
+				{
+					isRecToFile=1;
+					old_file_duration=0;
+
+				}
+			}
+			else if (isRecToFile)//close file  //for all recording types (by FREC button)
+			{
+				if (g_demo_parameters.opt_rec.file_type==0 || g_demo_parameters.opt_rec.file_type==2){
+					close_wave_file();
+					//HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, 1);
+				}
+				//if (g_demo_parameters.opt_rec.file_type==1 || g_demo_parameters.opt_rec.file_type==2)
+				//	close_txt_file( (float)wavsize1ch/(float)(SamplFreqSound*2));  //pop
+				isRecToFile=0;
+				draw_file_name = 2;//("");//duplicate for guarantee
+			}
+			flag_arm_rec_old = isRecPress;
+
+			///set_rec_button();
+		}
+
+		if (dat_kol == 10){
+			dat_kol = 11;
+			update_header(&Myfile,3,wavsize3ch);
+			f_close(&Myfile);
+			HAL_GPIO_WritePin(LED0_GPIO_Port, LED0_Pin, 1);
+		}
+
+		//Get Data
+		/* Wait until notified by the ISR that transmission is complete. */
+
+		//..HAL_GPIO_WritePin(GPIOB, VCP_RX_Pin, 1);
+		if (osSemaphoreAcquire(ad7124_notification_semaphoreHandle,	 1000) == osOK) {
+		//	if (xSemaphoreTake(ads1271_notification_semaphore, max_block_time_ticks)) {
+			//..HAL_GPIO_WritePin(GPIOB, VCP_RX_Pin, 0);
+
+			nbrb = ping_pong ^= 1;
+			//kv1 = 0; kv2 = 0; kv3 = 0;
+			//ks = 0;
+
+
+			//save to wave file:
+			if (isRecToFile)
+			{
+
+				if (g_demo_parameters.opt_rec.file_type==0)// || g_demo_parameters.opt_rec.file_type==2)//to wav
+				{
+/*					if (file_wave.fs != 0)
+					{
+						//pio_set_pin_low(LED0_GPIO);
+//sound
+						nn = 0;
+						size = SSC_BUFFER_SIZE*2;
+						while (size > nn) {
+							res = f_write(&file_wave, sound_rx_buff+nn, size-nn, &bw);	// Write the data to the file
+							if(res != FR_OK) break; // Alex, check
+							nn += bw;
+						}
+						wavsize1ch += nn;
+						///f_sync(&file_wave);
+
+
+					}
+*/
+					if(dat_kol < 10){
+					if (Myfile.obj.fs != 0)
+					{
+						kv=0; //ak1=-32760.0; ak2=32760.0; ak3=-32760.0;
+						for (int j = 0; j < 300; j++)
+						{
+							//sd_rx_buff[kv++] = __SSAT((ch1_samples[nbrb][j] >> 8),16);
+							//sd_rx_buff[kv++] = __SSAT((ch2_samples[nbrb][j] >> 8),16);
+							//sd_rx_buff[kv++] = __SSAT((ch3_samples[nbrb][j] >> 8),16);
+							sd_rx_buff[kv++] = ( int16_t)(ch1_samples[nbrb][j] >> 16);
+							sd_rx_buff[kv++] = ( int16_t)(ch2_samples[nbrb][j] >> 16);
+							sd_rx_buff[kv++] = ( int16_t)(ch3_samples[nbrb][j] >> 16);
+
+						}
+//vibro
+						nn = 0;
+						size = 300*6;  // bytes = 3short * 2
+						HAL_GPIO_WritePin(GPIOB, V_RX_Pin, 1);
+						while (size > nn) {
+							res = f_write(&Myfile, sd_rx_buff+nn, size-nn, &bw);// Write the data to the file
+							if(res != FR_OK) break; // Alex, check
+							nn += bw;
+						}
+						wavsize3ch += nn;
+						//f_sync(&MyFile);
+						dat_kol++;
+						HAL_GPIO_WritePin(GPIOB, V_RX_Pin, 0);
+					}
+				}
+				}
+				else
+				{
+					//wavsize1ch=wavsize1ch+SSC_BUFFER_SIZE*2;
+					wavsizeh += 300*2;
+				}
+
+				file_duration= wavsizeh/(300*2)/5;
+				if (file_duration > old_file_duration)
+				{
+					draw_rec_time(file_duration);
+				}
+				old_file_duration=file_duration;
+
+			}
+			else if (g_demo_parameters.opt_rec.nRecordMode==2 && (!isRecToFile))  //to calculate delay in cont mode
+			{
+				//wavsize1ch=wavsize1ch+SSC_BUFFER_SIZE*2;
+				wavsizeh += 300*2;
+				file_duration= wavsizeh/(300*2)/5;;
+
+			}
+
+
+			// ----------------------------------------  ALGO PROCESSING AND SCREEN REFRESH -----------------------
+			{
+
+				redraw_lcd++;
+				short isTrig=0;
+				switch (g_demo_parameters.nMeasMode)
+				{
+					case 0:  //EVS
+					if (get_special_mode_status(DEMO_MODE_EVS))
+					{
+						// sound signal for algo
+/*						for (int j = 0; j < SLM_BUFLEN; j++)	//kt
+						{
+							g_algo.SLMStruct.SLMfeedin[j] = (short)sound_rx_buff[j];  //Sameer; 3rd July 2024
+						}
+*/
+							//vibro raw data for algo
+							for (int j = 0; j < EVS_BUFLEN; j++) // algo supports EVS_BUFLEN(300)
+							{
+								g_algo.EVSStruct.input[0][j] = (float32_t)(ch1_samples[nbrb][j]);
+								g_algo.EVSStruct.input[1][j] = (float32_t)(ch2_samples[nbrb][j]);
+								g_algo.EVSStruct.input[2][j] = (float32_t)(ch3_samples[nbrb][j]);
+
+							}
+
+							EVSProcess(&(g_algo.EVSStruct), &(g_algo.SLMStruct), &(g_algo.SLMCaliStruct), &(g_algo.EVSOUTStruct));  //EVS Algo call per frame
+							isTrig= isTrig+ (short)g_algo.EVSOUTStruct.isTrigger;
+
+						if (redraw_lcd >= 10)
+						{
+							flag_lcd_update=0; //redraw lcd		//draw_evs_update((float)time_counter, g_algo.EVSOUTStruct); //draw_leq();
+							redraw_lcd = 0;
+						}
+
+					}
+					break;
+
+					case 1:	//BLS
+					if (get_special_mode_status(DEMO_MODE_BLAST))
+					{
+						////// sound signal for algo
+/*						for (int j = 0; j < SLM_BUFLEN; j++)
+						{
+							g_algo.SLMStruct.SLMfeedin[j] = (short)sound_rx_buff[j];  //Sameer; 3rd July 2024
+						}
+						////
+*/
+							//vibro raw data for algo
+							for (int j = 0; j < BLS_BUFLEN; j++) // algo supports EVS_BUFLEN(300)
+							{
+								g_algo.BLSStruct.input[0][j] = (float32_t)(ch1_samples[nbrb][j]);
+								g_algo.BLSStruct.input[1][j] = (float32_t)(ch2_samples[nbrb][j]);
+								g_algo.BLSStruct.input[2][j] = (float32_t)(ch3_samples[nbrb][j]);
+							}
+
+							BLSProcess(&(g_algo.BLSStruct), &(g_algo.SLMStruct), &(g_algo.SLMCaliStruct), &(g_algo.BLSOUTStruct ));  //BLS Alog call per frame
+							isTrig= isTrig+ (short)g_algo.BLSOUTStruct.isTrigger;
+
+						if (redraw_lcd >= 10)
+						{
+							flag_lcd_update=1; //redraw lcd    //draw_blast_update((float)time_counter, g_algo.BLSOUTStruct); //draw_leq();
+							redraw_lcd = 0;
+						}
+
+					}
+					break;
+				}
+/*
+				//------------trigger------------------
+				if ((g_demo_parameters.opt_rec.nRecordMode==1 || g_demo_parameters.opt_rec.nRecordMode==2) &&  //Single or Cont modes
+					isRecPress &&		//Rec mode
+					isTrig>0 &&			//trigger event
+					!isRecToFile)		//still no recording to files
+				{
+					if ( (g_demo_parameters.opt_rec.nRecordMode==2) && (file_duration < fDelayForContRec)) //for cont mode additionally it need to wait delay
+					;
+					else
+					{
+						if (create_files()!=FR_OK)
+						{
+							flag_arm_rec=0;
+							isRecToFile=0;
+						}
+						else
+						{
+							isRecToFile=1;
+							file_duration=0;
+							isTrig=0;
+							if (g_demo_parameters.nMeasMode==1)			g_algo.BLSStruct.TriggerFoundResetAlgo	=1;
+							else if (g_demo_parameters.nMeasMode==0)	g_algo.EVSStruct.TriggerFoundResetAlgo	=1;
+						}
+
+					}
+				}
+
+				//--------------stop by timer:--------------------
+				if (isRecToFile )
+				{
+					//pio_toggle_pin(LED0_GPIO);
+					if (g_demo_parameters.opt_rec.nRecordMode==0 && g_demo_parameters.opt_rec.timer>0  )  // Manual Mode
+					{
+						if (file_duration>=g_demo_parameters.opt_rec.timer)
+						{
+							flag_arm_rec=0;
+						}
+					}
+					if (g_demo_parameters.opt_rec.nRecordMode==1  ) //Single Rec mode
+					{
+						if (file_duration>=g_demo_parameters.opt_trig[g_demo_parameters.nMeasMode].fPostTrigTime)
+						{
+							flag_arm_rec=0;
+						}
+					}
+					if ( g_demo_parameters.opt_rec.nRecordMode==2  ) //Cont Rec mode
+					{
+						if (file_duration>=g_demo_parameters.opt_trig[g_demo_parameters.nMeasMode].fPostTrigTime)
+						{
+							//close current files by timer
+							if (g_demo_parameters.opt_rec.file_type==0 || g_demo_parameters.opt_rec.file_type==2)
+								close_wave_file();
+							if (g_demo_parameters.opt_rec.file_type==1 || g_demo_parameters.opt_rec.file_type==2)
+								close_txt_file( (float)wavsize1ch/(float)(SamplFreqSound*2));  //pop
+							isRecToFile=0;
+							draw_file_name = 2; // ("");//duplicate for guarantee
+
+							//to prevent full stop in the circle' begin
+							flag_arm_rec=1;
+							flag_arm_rec_old=0;
+
+							//in Cont mode after first recorded file it needs to make pause in fDelayForContRec (sec)
+							//and start to wait trigger
+							fDelayForContRec = (float)(g_demo_parameters.opt_trig[g_demo_parameters.nMeasMode].nDelay);
+							wavsize1ch = 0; wavsize3ch = 0;
+							file_duration = 0;
+						}
+					}
+				}
+*/
+/*
+				//-----------------------  Calibration  ----------------------------------:
+
+				if (get_special_mode_status(DEMO_OPT_TRANSD) && g_flagCalibr==1)
+				{
+						//Call the calibration
+						SLMCalibrationByChannel(&(g_algo.SLMCaliStruct), sound_rx_buff);
+
+						//vibro raw data for calibration
+						for (int j = 0; j < EVS_BUFLEN; j++) //!!!
+						{
+							m_data_calibr[0][j] = (short)vib_Output[0][j];	//kt
+							m_data_calibr[1][j] = (short)vib_Output[1][j];
+							m_data_calibr[2][j] = (short)vib_Output[2][j];
+						}
+
+						for (int ch=0;ch<3;ch++)
+							VLMCalibrationByChannel(&(g_algo.VLMCaliStruct), m_data_calibr[ch], ch);
+
+						if (g_algo.VLMCaliStruct.nCaliOver[0])
+						{
+							g_flagCalibr=0;
+
+						}
+
+				}//end Calibration
+*/
+			}//end algo processing
+		}
+	}
+
+}
+
+/* HAL_GPIO_Init(GPIOB, &GPIO_InitStruct); Configure the External Interrupt or event for the current IO */
+static void PB4EXTI_Init(void)
+{
+	SYSCFG->EXTICR[1] |= SYSCFG_EXTICR2_EXTI4_PB;
+	/* SET Falling edge configuration */
+	EXTI->FTSR1 |= EXTI_FTSR1_TR4;
+	/* SET EXTI line configuration */
+	EXTI->IMR1 |= EXTI_IMR1_IM4;
+	/* EXTI interrupt init*/
+	HAL_NVIC_SetPriority(EXTI4_IRQn, 5, 0);
+	HAL_NVIC_DisableIRQ(EXTI4_IRQn);
+
+}
+uint32_t spiState;
+uint32_t spiErrorCode = HAL_SPI_ERROR_NONE;
+uint32_t spiTxXferCount;
+uint32_t spiRxXferCount;
+uint32_t imdect;
+int32_t sam_count;
+/**
+  * @brief This function handles EXTI line4 interrupt.
+  */
+void EXTI4_IRQHandler(void)
+{
+ if(((EXTI->PR1) & (EXTI_PR1_PR4)) != 0){
+	EXTI->PR1 = EXTI_PR1_PR4;
+		//HAL_GPIO_WritePin(GPIOA, NSSSPI1_Pin, 0);
+	if(doutrdy == 0){
+
+		//HAL_GPIO_WritePin(GPIOB, VCP_TX_Pin, 1);
+
+		  /* Set the transaction information */
+		  spiState       = HAL_SPI_STATE_BUSY_TX_RX;
+		  spiErrorCode   = HAL_SPI_ERROR_NONE;
+
+		 /* SPIx CFG1 Configuration */
+		  //WRITE_REG(hspi->Instance->CFG1, (hspi->Init.BaudRatePrescaler | hspi->Init.CRCCalculation | crc_length | hspi->Init.FifoThreshold | hspi->Init.DataSize));
+		 /* 32BIT DataSize */
+		    SPI1->CFG1 |= SPI_DATASIZE_32BIT;
+
+		/* Set the number of data at current transfer */
+		SPI1->CR2 = 1;
+
+		/* Enable SPI peripheral */
+		SPI1->CR1 |= SPI_CR1_SPE;
+
+		/* Fill in the TxFIFO */
+	    /* Transmit data in 32 Bit mode */
+	    *((__IO uint32_t *)&(SPI1->TXDR)) = *((const uint32_t *) &(aTxBuffer[0]));
+
+	    /* Enable EOT, DXP, UDR, OVR, FRE, MODF and TSERF interrupts */
+	    //SPI1->IER |= (SPI_IT_EOT | SPI_IT_DXP | SPI_IT_UDR | SPI_IT_OVR | SPI_IT_FRE | SPI_IT_MODF | SPI_IT_TSERF);
+	    SPI1->IER |= (SPI_IT_EOT); // | SPI_IT_DXP | SPI_IT_UDR | SPI_IT_OVR | SPI_IT_FRE | SPI_IT_MODF | SPI_IT_TSERF);
+
+	    /* Start Master transfer */
+	    SPI1->CR1 |= SPI_CR1_CSTART;
+
+		//HAL_GPIO_WritePin(GPIOB, VCP_TX_Pin, 0);
+
+/*
+		HAL_GPIO_WritePin(GPIOB, VCP_TX_Pin, 1);
+			HAL_SPI_TransmitReceive_DMA(dev->spi_desc, (uint8_t*)aTxBuffer, (uint8_t *)aRxBuffer, 4);
+		HAL_GPIO_WritePin(GPIOB, VCP_TX_Pin, 0);
+*/
+	}
+
+	else if(doutrdy == 1){
+
+		//..HAL_GPIO_WritePin(GPIOB, VCP_TX_Pin, 1);
+
+		/* Set the transaction information */
+		  spiState       = HAL_SPI_STATE_BUSY_TX_RX;
+		  spiErrorCode   = HAL_SPI_ERROR_NONE;
+
+				/* Set the number of data at current transfer */
+				SPI1->CR2 = 1;
+
+				/* Enable SPI peripheral */
+				SPI1->CR1 |= SPI_CR1_SPE;
+
+				/* Fill in the TxFIFO */
+			    /* Transmit data in 32 Bit mode */
+			    *((__IO uint32_t *)&(SPI1->TXDR)) = *((const uint32_t *) &(aTxBuffer[0]));
+
+			    /* Enable EOT, DXP, UDR, OVR, FRE, MODF and TSERF interrupts */
+			    //SPI1->IER |= (SPI_IT_EOT | SPI_IT_DXP | SPI_IT_UDR | SPI_IT_OVR | SPI_IT_FRE | SPI_IT_MODF | SPI_IT_TSERF);
+			    SPI1->IER |= (SPI_IT_EOT); // | SPI_IT_DXP | SPI_IT_UDR | SPI_IT_OVR | SPI_IT_FRE | SPI_IT_MODF | SPI_IT_TSERF);
+
+			    /* Start Master transfer */
+			    SPI1->CR1 |= SPI_CR1_CSTART;
+		//..HAL_GPIO_WritePin(GPIOB, VCP_TX_Pin, 0);
+
+	}
+
+	doutrdy = 1;
+	//HAL_NVIC_DisableIRQ(EXTI4_IRQn);
+
+	EXTI->IMR1 &= ~EXTI_IMR1_IM4;
+ }
+}
+
+
+/**
+  * @brief This function handles SPI1 global interrupt.
+  */
+void SPI1_IRQHandler(void)
+{
+	uint32_t State = spiState;
+
+	//..HAL_GPIO_WritePin(GPIOB, VCP_TX_Pin, 1);
+	  /* SPI in mode Transmitter and Receiver no overrun- no underrun- Both TxFIFO has space for write and RxFIFO contains for read a single packet at least--*/
+//	  if (HAL_IS_BIT_CLR(trigger, SPI_FLAG_OVR) && HAL_IS_BIT_CLR(trigger, SPI_FLAG_UDR) && HAL_IS_BIT_SET(trigger, SPI_FLAG_DXP))
+//	  {
+//	    hspi->TxISR(hspi);
+//	    hspi->RxISR(hspi);
+//	    handled = 1UL;
+//	  }
+
+//	  if (handled != 0UL)
+//	  {
+//	    return;
+//	  }
+
+	  /* SPI End Of Transfer: DMA or IT based transfer */
+	  //if (HAL_IS_BIT_SET(trigger, SPI_FLAG_EOT))
+	if(SPI1->SR & SPI_FLAG_EOT)
+	  {
+	    /* Clear EOT/TXTF/SUSP flag */
+		SPI1->IFCR |= SPI_IFCR_EOTC | SPI_IFCR_TXTFC | SPI_IFCR_SUSPC;
+	    //__HAL_SPI_CLEAR_EOTFLAG(hspi);
+	    //__HAL_SPI_CLEAR_TXTFFLAG(hspi);
+	    //__HAL_SPI_CLEAR_SUSPFLAG(hspi);
+
+	    /* Disable EOT interrupt */
+	    //__HAL_SPI_DISABLE_IT(hspi, SPI_IT_EOT);
+		SPI1->IER  &= ~(SPI_IT_EOT);
+
+	    /* For the IT based receive extra polling maybe required for last packet */
+
+	      /* Pooling remaining data */
+//	      while (hspi->RxXferCount != 0UL)
+//	      {
+	        /* Receive data in 32 Bit mode */
+
+//	          *((uint32_t *)hspi->pRxBuffPtr) = *((__IO uint32_t *)&hspi->Instance->RXDR);
+//	          hspi->pRxBuffPtr += sizeof(uint32_t);
+
+//	        hspi->RxXferCount--;
+//	      }
+
+		*((uint32_t *)&(aRxBuffer[0])) = *((__IO uint32_t *)&(SPI1->RXDR));
+		//aRxBuffer[0] = tyu;
+		//tyu += 0x100;
+	    /* Call SPI Standard close procedure */
+	    MY_SPI_CloseTransfer();
+
+	    spiState = HAL_SPI_STATE_READY;
+	    if (spiErrorCode != HAL_SPI_ERROR_NONE)
+	    {
+
+	      MY_SPI_ErrorCallback();
+		  //..HAL_GPIO_WritePin(GPIOB, VCP_TX_Pin, 0);
+	      return;
+	    }
+
+	    /* Call appropriate user callback */
+	    if (State == HAL_SPI_STATE_BUSY_TX_RX)
+	    {
+	      MY_SPI_TxRxCpltCallback();
+	    }
+	    else
+	    {
+	      /* End of the appropriate call */
+	    }
+		  //..HAL_GPIO_WritePin(GPIOB, VCP_TX_Pin, 0);
+	    return;
+	  }
+
+	  /* SPI in Error Treatment --------------------------------------------------*/
+	  if (((SPI1->IER & SPI1->SR) & (SPI_FLAG_MODF | SPI_FLAG_OVR | SPI_FLAG_FRE | SPI_FLAG_UDR)) != 0UL)
+	  {
+	    /* SPI Overrun error interrupt occurred ----------------------------------*/
+	    if (((SPI1->IER & SPI1->SR) & SPI_FLAG_OVR) != 0UL)
+	    {
+	      SET_BIT(spiErrorCode, HAL_SPI_ERROR_OVR);
+	      //__HAL_SPI_CLEAR_OVRFLAG(hspi);
+	      SPI1->IFCR |= SPI_IFCR_OVRC;
+	    }
+
+	    /* SPI Mode Fault error interrupt occurred -------------------------------*/
+	    if (((SPI1->IER & SPI1->SR) & SPI_FLAG_MODF) != 0UL)
+	    {
+	      SET_BIT(spiErrorCode, HAL_SPI_ERROR_MODF);
+	      //__HAL_SPI_CLEAR_MODFFLAG(hspi);
+	      SPI1->IFCR |= SPI_IFCR_MODFC;
+	    }
+
+	    /* SPI Frame error interrupt occurred ------------------------------------*/
+	    if (((SPI1->IER & SPI1->SR) & SPI_FLAG_FRE) != 0UL)
+	    {
+	      SET_BIT(spiErrorCode, HAL_SPI_ERROR_FRE);
+	      //__HAL_SPI_CLEAR_FREFLAG(hspi);
+	      SPI1->IFCR |= SPI_IFCR_TIFREC;
+	    }
+
+	    /* SPI Underrun error interrupt occurred ------------------------------------*/
+	    if (((SPI1->IER & SPI1->SR) & SPI_FLAG_UDR) != 0UL)
+	    {
+	      SET_BIT(spiErrorCode, HAL_SPI_ERROR_UDR);
+	      //__HAL_SPI_CLEAR_UDRFLAG(hspi);
+	      SPI1->IFCR |= SPI_IFCR_UDRC;
+	    }
+
+	    if (spiErrorCode != HAL_SPI_ERROR_NONE)
+	    {
+	      /* Disable SPI peripheral */
+	      //__HAL_SPI_DISABLE(hspi);
+	    	SPI1->CR1  &= ~(SPI_CR1_SPE);
+
+	      /* Disable all interrupts */
+	      //__HAL_SPI_DISABLE_IT(hspi, (SPI_IT_EOT | SPI_IT_RXP | SPI_IT_TXP | SPI_IT_MODF |
+	      //                            SPI_IT_OVR | SPI_IT_FRE | SPI_IT_UDR));
+	      SPI1->IER &= ~((SPI_IT_EOT | SPI_IT_RXP | SPI_IT_TXP | SPI_IT_MODF | SPI_IT_OVR | SPI_IT_FRE | SPI_IT_UDR));
+
+	        /* Restore hspi->State to Ready */
+	        spiState = HAL_SPI_STATE_READY;
+
+	        /* Call user error callback */
+	        MY_SPI_ErrorCallback();
+	    }
+		 // HAL_GPIO_WritePin(GPIOB, VCP_TX_Pin, 0);
+	    return;
+	  }
+	  //HAL_GPIO_WritePin(GPIOB, VCP_TX_Pin, 0);
+}
+
+
+void MY_SPI_TxRxCpltCallback()
+{
+  /*  Transfer in transmission process is complete */
+
+  /* Transfer in reception process is complete */
+	EXTI->IMR1 |= EXTI_IMR1_IM4;//setting bits
+
+//	*((uint32_t *)&(aRxBuffer[0])) = *((__IO uint32_t *)&(SPI1->RXDR));
+
+	/* Build the result */
+
+		if (channel_read == 0) {
+			ch1_samples[ping_pong][ch_samples_count] =  (aRxBuffer[0] << 8) - 0x80000000;
+
+		}
+		else if (channel_read == 1) {
+			ch2_samples[ping_pong][ch_samples_count] = (aRxBuffer[0] << 8) - 0x80000000;
+
+		}
+		else if (channel_read == 2) {
+			ch3_samples[ping_pong][ch_samples_count++] = (aRxBuffer[0] << 8) - 0x80000000;
+
+		}
+
+	if(channel_read < 2) channel_read++;
+	else channel_read = 0;
+
+	if (ch_samples_count == 300) {
+			ch_samples_count = 0;
+			ping_pong ^= 1;
+			if (ad7124_notification_semaphoreHandle != NULL) {
+				osSemaphoreRelease(ad7124_notification_semaphoreHandle);
+				//HAL_GPIO_TogglePin(GPIOB, V_TX_Pin);
+			}
+	}
+
+
+
+	  while(HAL_NVIC_GetPendingIRQ(EXTI4_IRQn)) {
+	    EXTI->PR1 = (EXTI_PR1_PR4);
+	    HAL_NVIC_ClearPendingIRQ(EXTI4_IRQn);
+	  }
+	  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+  wTransferState = TRANSFER_COMPLETE;
+
+}
+
+/**
+  * @brief  Close Transfer and clear flags.
+  * @param  hspi: pointer to a SPI_HandleTypeDef structure that contains
+  *               the configuration information for SPI module.
+  * @retval HAL_ERROR: if any error detected
+  *         HAL_OK: if nothing detected
+  */
+static void MY_SPI_CloseTransfer()
+{
+  //uint32_t itflag = SPI1->SR;
+
+  //__HAL_SPI_CLEAR_EOTFLAG(hspi);
+  //__HAL_SPI_CLEAR_TXTFFLAG(hspi);
+  SPI1->IFCR |= SPI_IFCR_EOTC | SPI_IFCR_TXTFC;
+
+  /* Disable SPI peripheral */
+  //__HAL_SPI_DISABLE(hspi);
+  SPI1->CR1  &= ~(SPI_CR1_SPE);
+
+  /* Disable ITs */
+   SPI1->IER &= ~((SPI_IT_EOT | SPI_IT_TXP | SPI_IT_RXP | SPI_IT_DXP | SPI_IT_UDR | SPI_IT_OVR | SPI_IT_FRE | SPI_IT_MODF));
+
+
+  /* Report UnderRun error for non RX Only communication */
+/*  if (spiState != HAL_SPI_STATE_BUSY_RX)
+  {
+    if ((itflag & SPI_FLAG_UDR) != 0UL)
+    {
+      SET_BIT(spiErrorCode, HAL_SPI_ERROR_UDR);
+      //__HAL_SPI_CLEAR_UDRFLAG(hspi);
+      SPI1->IFCR |= SPI_IFCR_UDRC;
+    }
+  }
+*/
+  /* Report OverRun error for non TX Only communication */
+/*  if (spiState != HAL_SPI_STATE_BUSY_TX)
+  {
+    if ((itflag & SPI_FLAG_OVR) != 0UL)
+    {
+      SET_BIT(spiErrorCode, HAL_SPI_ERROR_OVR);
+      //__HAL_SPI_CLEAR_OVRFLAG(hspi);
+      SPI1->IFCR |= SPI_IFCR_OVRC;
+    }
+  }
+*/
+  /* SPI Mode Fault error interrupt occurred -----------------------------??*/
+/*  if ((itflag & SPI_FLAG_MODF) != 0UL)
+  {
+    SET_BIT(spiErrorCode, HAL_SPI_ERROR_MODF);
+    //__HAL_SPI_CLEAR_MODFFLAG(hspi);
+    SPI1->IFCR |= SPI_IFCR_MODFC;
+  }
+*/
+  /* SPI Frame error interrupt occurred ----------------------------------??*/
+/*  if ((itflag & SPI_FLAG_FRE) != 0UL)
+  {
+    SET_BIT(spiErrorCode, HAL_SPI_ERROR_FRE);
+    //__HAL_SPI_CLEAR_FREFLAG(hspi);
+    SPI1->IFCR |= SPI_IFCR_TIFREC;
+  }
+*/
+  //spiTxXferCount = (uint16_t)0UL;
+  //spiRxXferCount = (uint16_t)0UL;
+}
+
+
+
+/**
+  * @brief  TxRx Transfer completed callback.
+  * @param  hspi: SPI handle
+  * @note   This example shows a simple way to report end of DMA TxRx transfer, and
+  *         you can add your own implementation.
+  * @retval None
+  */
+//void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
+//{
+  /*  Transfer in transmission process is complete */
+
+  /* Transfer in reception process is complete */
+//	EXTI->IMR1 |= EXTI_IMR1_IM4;//setting bits
+
+	/* Build the result
+	res_value = 0;
+	for(imd = 1; imd < 3 + 1; imd++) {
+		res_value <<= 8;
+		res_value += aRxBuffer[imd];
+	}
+	channel_read = aRxBuffer[5] & 0x0F;
+	if (channel_read < AD7124_CHANNEL_COUNT) {
+		if (channel_read == 0) {
+			if (ch1_samples_count < 160) ch1_samples[ping_pong][ch1_samples_count++] = res_value;
+			else count_error++;
+		}
+		if (channel_read == 1) {
+			if (ch2_samples_count < 160) ch2_samples[ping_pong][ch2_samples_count++] = res_value;
+			else count_error++;
+		}
+		if (channel_read == 2) {
+			if (ch3_samples_count < 160) ch3_samples[ping_pong][ch3_samples_count++] = res_value;
+			else count_error++;
+		}
+	} else {
+			//"Channel Read was %d, which is not < AD7124_CHANNEL_COUNT\r\n"
+	}
+
+	if (ch3_samples_count == 160) {
+		if ((ch3_samples_count == ch2_samples_count) && (ch3_samples_count == ch1_samples_count)) {
+			ch3_samples_count = 0;
+			ch2_samples_count = 0;
+			ch1_samples_count = 0;
+			ping_pong ^= 1;
+		} else count_error++;
+
+	}
+*/
+
+
+//	  while(HAL_NVIC_GetPendingIRQ(EXTI4_IRQn)) {
+//	    EXTI->PR1 = (EXTI_PR1_PR4);
+//	    HAL_NVIC_ClearPendingIRQ(EXTI4_IRQn);
+//	  }
+//	  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+//  wTransferState = TRANSFER_COMPLETE;
+
+//}
+/**
+  * @brief  SPI error callbacks.
+  * @param  hspi: SPI handle
+  * @note   This example shows a simple way to report transfer error, and you can
+  *         add your own implementation.
+  * @retval None
+  */
+void MY_SPI_ErrorCallback()
+{
+  wTransferState = TRANSFER_ERROR;
+}
+
+static FRESULT create_wav_file()
+{
+	FRESULT res = FR_NOT_READY;//FR_INVALID_PARAMETER;
+
+	dt_dsp.year = 2021;
+	dt_dsp.month = 12;
+	dt_dsp.day = 21;
+	dt_dsp.hour = 21;
+	dt_dsp.minute = 21;
+	dt_dsp.second = 21;
+
+
+
+	if (mounted)
+	{
+		if (file_wave3ch.obj.fs == 0) //file_wave.fs == 0)
+		{
+			char test_file_name[32] = "0:data.txt";
+/*			snprintf_(cnt_file_name, 32,"%04lu%02lu%02lu-%02lu%02lu%02lu_1ch.wav",	dt_dsp.year, dt_dsp.month, dt_dsp.day, dt_dsp.hour, dt_dsp.minute, dt_dsp.second);
+			snprintf_(str_start_rec, 32," %04lu-%02lu-%02lu  %02lu:%02lu:%02lu",	dt_dsp.year, dt_dsp.month, dt_dsp.day, dt_dsp.hour, dt_dsp.minute, dt_dsp.second);
+			//res = sd_f_create(cnt_file_name, &file_object2);
+
+			test_file_name[0] = LUN_ID_SD_MMC_0_MEM + '0';	// drive:file.txt
+			strncpy(test_file_name+2, cnt_file_name, strlen(cnt_file_name));
+			test_file_name[strlen(cnt_file_name)+2] = '\000'; // \0 - end of path name
+
+			res = f_open(&file_wave, (char const *)test_file_name, FA_OPEN_ALWAYS | FA_WRITE);
+			if (res == FR_OK)
+			{
+				f_sync(&file_wave);//alex
+				res=create_header(&file_wave,1,SamplFreqSound);
+*/
+			   /* Create and Open a new text file object with write access */
+			   // if(f_open(&file_wave3ch, "STM32_23.txt", FA_OPEN_ALWAYS | FA_WRITE) == FR_OK)
+			   // {
+				//	f_sync(&file_wave3ch);//alex
+				//	res=create_header(&file_wave3ch,3,SamplFreqVibro);
+			   // }
+					snprintf_(cnt_file_name, 32,"%04lu%02lu%02lu-%02lu%02lu%02lu_3ch.wav",	dt_dsp.year, dt_dsp.month, dt_dsp.day, dt_dsp.hour, dt_dsp.minute, dt_dsp.second);
+
+					//test_file_name[0] = LUN_ID_SD_MMC_0_MEM + '0';	// drive:file.txt
+					//strncpy(test_file_name+2, cnt_file_name, strlen(cnt_file_name));
+					//test_file_name[strlen(cnt_file_name)+2] = '\000'; // \0 - end of path name
+
+					res = f_open(&file_wave3ch, (char const *)cnt_file_name, FA_OPEN_ALWAYS | FA_WRITE);
+					if (res == FR_OK)
+					{
+						f_sync(&file_wave3ch);//alex
+						res=create_header(&file_wave3ch,3,SamplFreqVibro);
+
+						draw_file_name = 1;//(cnt_file_name);
+					}
+					else if (res==FR_NOT_READY)  //no SD
+					{
+						mounted=0;
+						//DrawSD();
+					}
+/*			}
+			else if (res==FR_NOT_READY)  //no SD
+			{
+				mounted=0;
+				//DrawSD();
+			}
+*/
+		}
+
+	}
+	return res;
+}
+
+static void close_wave_file(void)
+{
+	//update header
+	//update_header(&file_wave,1,wavsize1ch);
+	//f_close(&file_wave);
+
+	update_header(&file_wave3ch,3,wavsize3ch);
+	f_close(&file_wave3ch);
+
+	draw_file_name = 2;//("");
+	draw_rec_time(0);
+	//ioport_set_pin_level(LED0_GPIO, IOPORT_PIN_LEVEL_HIGH);
+}
+/*
+static FRESULT create_txt_file(void)
+{
+	FRESULT res = FR_NOT_READY;//FR_INVALID_PARAMETER;
+	int timeproblem, tp;
+
+	if (strlen(cnt_file_name)>0 )  //name is already created for wav-file
+	{
+		strncpy(cnt_file_name+15,".txt\0",5);
+	}
+	else
+	{
+		dt_dsp.year = 2021;
+		dt_dsp.month = 12;
+		dt_dsp.day = 21;
+		dt_dsp.hour = 21;
+		dt_dsp.minute = 21;
+		dt_dsp.second = 21;
+
+
+		snprintf_(cnt_file_name, 32,"%04lu%02lu%02lu-%02lu%02lu%02lu.txt",	dt_dsp.year, dt_dsp.month, dt_dsp.day, dt_dsp.hour, dt_dsp.minute, dt_dsp.second);
+		snprintf_(str_start_rec, 32," %04lu-%02lu-%02lu  %02lu:%02lu:%02lu",	dt_dsp.year, dt_dsp.month, dt_dsp.day, dt_dsp.hour, dt_dsp.minute, dt_dsp.second);
+	}
+
+	if (mounted)
+	{
+		if (file_txt.fs == 0)
+		{
+			char test_file_name[32] = "0:data.txt";
+
+			//res = sd_f_create(cnt_file_name, &file_object2);
+
+			test_file_name[0] = LUN_ID_SD_MMC_0_MEM + '0';	// drive:file.txt
+			strncpy(test_file_name+2, cnt_file_name, strlen(cnt_file_name));
+			test_file_name[strlen(cnt_file_name)+2] = '\000'; // \0 - end of path name
+
+			res = f_open(&file_txt, (char const *)test_file_name, FA_OPEN_ALWAYS | FA_WRITE);
+			if (res == FR_OK)
+			{
+				char tmp[32];
+				UINT bw;
+				snprintf_(tmp,32,"File: %s\r\n",cnt_file_name);
+				 f_write(&file_txt, tmp, strlen(tmp), &bw);
+
+				f_sync(&file_txt);
+
+				if (g_demo_parameters.opt_rec.file_type==1) //only txt
+					draw_file_name = 1;//(cnt_file_name);
+			}
+			else if (res==FR_NOT_READY)  //no SD
+			{
+				mounted=0;
+				//DrawSD();
+			}
+		}
+	}
+	return res;
+}
+
+static void close_txt_file(float time)
+{
+	write_result(&file_txt, time);
+
+	//
+	f_close(&file_txt);
+
+	draw_file_name = 2;// ("");
+	draw_rec_time(0);
+	//ioport_set_pin_level(LED0_GPIO, IOPORT_PIN_LEVEL_HIGH);
+}
+*/
+static FRESULT create_files()
+{
+	FRESULT result=FR_NOT_READY;
+	cnt_file_name[0]=0;
+	if (g_demo_parameters.opt_rec.file_type==0 || g_demo_parameters.opt_rec.file_type==2)
+		result=create_wav_file();
+//	if (g_demo_parameters.opt_rec.file_type==1 || g_demo_parameters.opt_rec.file_type==2)
+//		result=create_txt_file();
+	wavsizeh = 0; wavsize1ch = 0; wavsize3ch = 0;
+	return result;
+}
+
+
+
+

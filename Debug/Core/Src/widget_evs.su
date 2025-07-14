@@ -1,0 +1,8 @@
+../Core/Src/widget_evs.c:31:6:evs_win_KEY_handler	40	static
+../Core/Src/widget_evs.c:61:13:widget_evs_command_handler	16	static
+../Core/Src/widget_evs.c:115:6:app_widget_launch_evs	16	static
+../Core/Src/widget_evs.c:132:6:draw_evs_static	24	static
+../Core/Src/widget_evs.c:145:6:draw_evs_update	32	static
+../Core/Src/widget_evs.c:168:6:DrawGrid_evs	72	static
+../Core/Src/widget_evs.c:217:6:DrawInGrid_evs	96	static
+../Core/Src/widget_evs.c:240:6:ini_evs_algo	16	static

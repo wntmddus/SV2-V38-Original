@@ -1,0 +1,10 @@
+../Core/Src/Widget_trasducer.c:45:13:transd_exit	8	static
+../Core/Src/Widget_trasducer.c:63:13:set_text_	72	static
+../Core/Src/Widget_trasducer.c:102:13:set_text	16	static
+../Core/Src/Widget_trasducer.c:110:13:draw_static	88	static
+../Core/Src/Widget_trasducer.c:220:6:transd_win_KEY_handler	40	static
+../Core/Src/Widget_trasducer.c:262:13:set_opt_sel	48	static
+../Core/Src/Widget_trasducer.c:283:13:widget_transd_command_handler	80	static
+../Core/Src/Widget_trasducer.c:438:6:app_widget_launch_transd	16	static
+../Core/Src/Widget_trasducer.c:452:6:app_widget_launch_transd_back	40	static
+../Core/Src/Widget_trasducer.c:484:6:do_calibration	64	static

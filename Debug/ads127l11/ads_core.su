@@ -1,0 +1,14 @@
+../ads127l11/ads_core.c:39:16:signExtend	40	static
+../ads127l11/ads_core.c:73:23:buildSPIarray	32	static
+../ads127l11/ads_core.c:107:16:enforce_selected_device_modes	16	static
+../ads127l11/ads_core.c:166:10:ads127l11_write_register	40	static
+../ads127l11/ads_core.c:207:10:ads127l11_read_register	48	static
+../ads127l11/ads_core.c:238:10:ads127l11_read_raw_24bit_crc_off_status_off	32	static
+../ads127l11/ads_core.c:251:10:ads127l11_read_data	48	static
+../ads127l11/ads_core.c:290:10:ads127l11_get_register_val	16	static
+../ads127l11/ads_core.c:318:13:ads127l11_restore_default	16	static
+../ads127l11/ads_core.c:350:10:ads127l11_reset_by_command	40	static
+../ads127l11/ads_core.c:393:10:ads127l11_reset_by_pattern	40	static
+../ads127l11/ads_core.c:435:6:ads127l11_setup	32	static
+../ads127l11/ads_core.c:494:6:ads127l11_set_gain	16	static
+../ads127l11/ads_core.c:501:6:ads127l11_set_offset	16	static

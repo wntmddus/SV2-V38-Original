@@ -1,0 +1,7 @@
+../Core/Src/widget_inputbox.c:31:6:inputbox_KEY_handler	40	static
+../Core/Src/widget_inputbox.c:61:13:set_position	48	static
+../Core/Src/widget_inputbox.c:89:13:set_digit	40	static
+../Core/Src/widget_inputbox.c:101:13:trim_string	24	static
+../Core/Src/widget_inputbox.c:132:13:inputbox_command_handler	24	static
+../Core/Src/widget_inputbox.c:225:13:draw	40	static
+../Core/Src/widget_inputbox.c:239:6:app_widget_launch_inputbox	56	static

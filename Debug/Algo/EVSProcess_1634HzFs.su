@@ -1,0 +1,4 @@
+../Algo/EVSProcess_1634HzFs.c:41:7:intEVSProcess	32	static
+../Algo/EVSProcess_1634HzFs.c:74:7:EVSProcess	80	static
+../Algo/EVSProcess_1634HzFs.c:362:7:ResetEVSAlgo	32	static
+../Algo/EVSProcess_1634HzFs.c:428:7:EVSLnDetector	88	static

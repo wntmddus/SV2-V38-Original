@@ -1,0 +1,9 @@
+../Core/Src/widget_trigger_evs.c:43:20:GetOptText	6
+../Core/Src/widget_trigger_evs.c:62:13:getDefValIndex	12
+../Core/Src/widget_trigger_evs.c:88:13:set_opt_sel	5
+../Core/Src/widget_trigger_evs.c:99:13:set_opt_val_sel	2
+../Core/Src/widget_trigger_evs.c:112:13:draw_static	2
+../Core/Src/widget_trigger_evs.c:145:6:trigger_evs_win_KEY_handler	6
+../Core/Src/widget_trigger_evs.c:169:13:trigger_evs_exit	2
+../Core/Src/widget_trigger_evs.c:180:13:widget_trig_evs_command_handler	15
+../Core/Src/widget_trigger_evs.c:293:6:app_widget_launch_trigger_evs	1
