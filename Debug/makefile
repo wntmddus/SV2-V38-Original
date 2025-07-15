@@ -70,8 +70,8 @@ all: main-build
 main-build: FreeRTOS_v1.elf secondary-outputs
 
 # Tool invocations
-FreeRTOS_v1.elf FreeRTOS_v1.map: $(OBJS) $(USER_OBJS) D:\SVIB\DEVELOPMENT_PROJECTS\SV2\JUNE_2025\SV2-V36\FreeRTOS_v1\STM32H743VITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "FreeRTOS_v1.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"D:\SVIB\DEVELOPMENT_PROJECTS\SV2\JUNE_2025\SV2-V36\FreeRTOS_v1\STM32H743VITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="FreeRTOS_v1.map" -Wl,--gc-sections -static -L../Drivers/CMSIS/Lib/GCC --specs=nano.specs -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+FreeRTOS_v1.elf FreeRTOS_v1.map: $(OBJS) $(USER_OBJS) ../STM32H743VITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "FreeRTOS_v1.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m7 -T"../STM32H743VITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="FreeRTOS_v1.map" -Wl,--gc-sections -static -L../Drivers/CMSIS/Lib/GCC  -mfpu=fpv5-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
