@@ -153,7 +153,7 @@ short BLSProcess(struct _BLS* Strptr, struct _SLM* SLMStruct, struct _SLMCALI* S
 				Strptr->fCaliInput[ch][cn] = (double)(Strptr->input[ch][cn]) * Strptr->fCaliFactor[ch]; //Calibration gain applied  //sam test
 			}
 
-#if 0
+#if 1
 			////DC removal filter ------
 			if (Strptr->firstframe[ch] < 2)
 			{
@@ -171,7 +171,7 @@ short BLSProcess(struct _BLS* Strptr, struct _SLM* SLMStruct, struct _SLMCALI* S
 				{
 					Strptr->HPFBLS[ch][0][2] = Strptr->HPFBLS[ch][0][1];
 					Strptr->HPFBLS[ch][0][1] = Strptr->HPFBLS[ch][0][0];
-					Strptr->HPFBLS[ch][0][0] = (float)(Strptr->fCaliInput[ch][cn]) - Strptr->HPFBLS[ch][0][1] * (-1.994561968134844764932722682715393602848f) - Strptr->HPFBLS[ch][0][2] * (0.994576714189731481141620861308183521032f);
+					Strptr->HPFBLS[ch][0][0] = (float)(Strptr->fCaliInput[ch][cn]) - Strptr->HPFBLS[ch][0][1] * (-1.992418154101028626712377445073798298836f) - Strptr->HPFBLS[ch][0][2] * (0.992432884306420626252531747013563290238f);
 					Strptr->fCaliInput[ch][cn] = Strptr->HPFBLS[ch][0][0] + Strptr->HPFBLS[ch][0][1] * (-2.0f) + Strptr->HPFBLS[ch][0][2];
 					Strptr->fCaliInput[ch][cn] = Strptr->fCaliInput[ch][cn] * (1 - exp(-(double)cn / (double)(2*EVS_BUFLEN * localmax)));
 				}
@@ -182,7 +182,7 @@ short BLSProcess(struct _BLS* Strptr, struct _SLM* SLMStruct, struct _SLMCALI* S
 				{
 					Strptr->HPFBLS[ch][0][2] = Strptr->HPFBLS[ch][0][1];
 					Strptr->HPFBLS[ch][0][1] = Strptr->HPFBLS[ch][0][0];
-					Strptr->HPFBLS[ch][0][0] = (float)(Strptr->fCaliInput[ch][cn]) - Strptr->HPFBLS[ch][0][1] * (-1.994561968134844764932722682715393602848f) - Strptr->HPFBLS[ch][0][2] * (0.994576714189731481141620861308183521032f);
+					Strptr->HPFBLS[ch][0][0] = (float)(Strptr->fCaliInput[ch][cn]) - Strptr->HPFBLS[ch][0][1] * (-1.992418154101028626712377445073798298836f) - Strptr->HPFBLS[ch][0][2] * (0.992432884306420626252531747013563290238f);
 					Strptr->fCaliInput[ch][cn] = Strptr->HPFBLS[ch][0][0] + Strptr->HPFBLS[ch][0][1] * (-2.0f) + Strptr->HPFBLS[ch][0][2];
 					//Strptr->fCaliInput[ch][cn] = Strptr->fCaliInput[ch][cn];
 				}

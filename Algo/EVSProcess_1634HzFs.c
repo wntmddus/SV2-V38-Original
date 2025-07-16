@@ -113,7 +113,7 @@ short EVSProcess(struct _EVS* Strptr, struct _SLM* SLMStruct, struct _SLMCALI* S
 			//Strptr->fCaliInput[ch][cn] = (double)(Strptr->input[ch][cn]) * 1.666666666666667e-4;// * Strptr->fCaliFactor[ch]; //Calibration gain applied  //sam test
 			Strptr->fCaliInput[ch][cn] = (double)(Strptr->input[ch][cn]) * Strptr->fCaliFactor[ch]; //Calibration gain applied
 		}
-#if 0
+#if 1
 		////DC removal filter ------
 		if (Strptr->firstframe[ch] < 2)
 		{
@@ -131,7 +131,7 @@ short EVSProcess(struct _EVS* Strptr, struct _SLM* SLMStruct, struct _SLMCALI* S
 			{
 				Strptr->HPFEVS[ch][0][2] = Strptr->HPFEVS[ch][0][1];
 				Strptr->HPFEVS[ch][0][1] = Strptr->HPFEVS[ch][0][0];
-				Strptr->HPFEVS[ch][0][0] = (float)(Strptr->fCaliInput[ch][cn]) - Strptr->HPFEVS[ch][0][1] * (-1.994561968134844764932722682715393602848f) - Strptr->HPFEVS[ch][0][2] * ( 0.994576714189731481141620861308183521032f);
+				Strptr->HPFEVS[ch][0][0] = (float)(Strptr->fCaliInput[ch][cn]) - Strptr->HPFEVS[ch][0][1] * (-1.992418154101028626712377445073798298836f) - Strptr->HPFEVS[ch][0][2] * (0.992432884306420626252531747013563290238f);
 				Strptr->fCaliInput[ch][cn] = Strptr->HPFEVS[ch][0][0] + Strptr->HPFEVS[ch][0][1] * (-2.0f) + Strptr->HPFEVS[ch][0][2];
 				Strptr->fCaliInput[ch][cn] = Strptr->fCaliInput[ch][cn] * (1 - exp(-(double)cn/ (double)(EVS_BUFLEN * localmax)));
 			}
@@ -142,7 +142,7 @@ short EVSProcess(struct _EVS* Strptr, struct _SLM* SLMStruct, struct _SLMCALI* S
 			{
 				Strptr->HPFEVS[ch][0][2] = Strptr->HPFEVS[ch][0][1];
 				Strptr->HPFEVS[ch][0][1] = Strptr->HPFEVS[ch][0][0];
-				Strptr->HPFEVS[ch][0][0] = (float)(Strptr->fCaliInput[ch][cn]) - Strptr->HPFEVS[ch][0][1] * (-1.994561968134844764932722682715393602848f) - Strptr->HPFEVS[ch][0][2] * ( 0.994576714189731481141620861308183521032f);
+				Strptr->HPFEVS[ch][0][0] = (float)(Strptr->fCaliInput[ch][cn]) - Strptr->HPFEVS[ch][0][1] * (-1.992418154101028626712377445073798298836f) - Strptr->HPFEVS[ch][0][2] * (0.992432884306420626252531747013563290238f);
 				Strptr->fCaliInput[ch][cn] = Strptr->HPFEVS[ch][0][0] + Strptr->HPFEVS[ch][0][1] * (-2.0f) + Strptr->HPFEVS[ch][0][2];
 				//Strptr->fCaliInput[ch][cn] = Strptr->fCaliInput[ch][cn];
 			}
