@@ -20,6 +20,7 @@
 #include "ads_core.h"
 
 
+
 #define SSC_MEM_SIZE		(VIB_BUFFER_SIZE*2*3)
 
 #define LENGTH_SAMPLES  SSC_BUFFER_SIZE
@@ -275,6 +276,8 @@ void StartTask01(void *pvParameters)
 	  HAL_GPIO_WritePin(GPIOC, AN_POWER_DOWN_Pin, 1);
 
 	  g_flagCalibr=0;
+
+
 
 ///	    if(BSP_SD_IsDetected())
 ///	    {
@@ -1489,16 +1492,15 @@ void vibro(void)
 						g_algo.EVSStruct.input[0][j] = ((float32_t)(ch1_samples[nbrb][j]))*0.00390625f;
 						g_algo.EVSStruct.input[1][j] = ((float32_t)(ch2_samples[nbrb][j]))*0.00390625f;
 						g_algo.EVSStruct.input[2][j] = ((float32_t)(ch3_samples[nbrb][j]))*0.00390625f;
-
 					}
 
 					EVSProcess(&(g_algo.EVSStruct), &(g_algo.SLMStruct), &(g_algo.SLMCaliStruct), &(g_algo.EVSOUTStruct));  //EVS Algo call per frame
 					//isTrig= isTrig+ (short)g_algo.EVSOUTStruct.VibrationTriggerFound;
 					isTrig= isTrig+ (short)g_algo.EVSOUTStruct.VibrationTriggerFound;   + (short)g_algo.EVSOUTStruct.SoundTriggerFound;  //Sameer: 26th June, 2025
 
-				if (redraw_lcd >= 5)
+				if (redraw_lcd >= 1)
 				{
-					flag_lcd_update=0; //redraw lcd		//draw_evs_update((float)time_counter, g_algo.EVSOUTStruct); //draw_leq();
+					flag_lcd_update=0; //redraw lcd       //draw_evs_update((float)time_counter, g_algo.EVSOUTStruct); //draw_leq();
 					redraw_lcd = 0;
 				}
 
@@ -1527,7 +1529,7 @@ void vibro(void)
 					//isTrig= isTrig+ (short)g_algo.BLSOUTStruct.VibrationTriggerFound;
 					isTrig= isTrig+ (short)g_algo.BLSOUTStruct.VibrationTriggerFound + (short)g_algo.BLSOUTStruct.SoundTriggerFound;  //Sameer: 26th June, 2025
 
-				if (redraw_lcd >= 5)
+				if (redraw_lcd >= 1)
 				{
 					flag_lcd_update=1; //redraw lcd    //draw_blast_update((float)time_counter, g_algo.BLSOUTStruct); //draw_leq();
 					redraw_lcd = 0;
@@ -1559,6 +1561,8 @@ void vibro(void)
 					isTrig=0;
 					if (g_demo_parameters.nMeasMode==1)			g_algo.BLSStruct.TriggerFoundResetAlgo	=1;
 					else if (g_demo_parameters.nMeasMode==0)	g_algo.EVSStruct.TriggerFoundResetAlgo	=1;
+					
+
 				}
 
 			}

@@ -4,13 +4,13 @@
 ../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c:512:10:HAL_PWREx_GetVoltageRange	4	static
 ../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c:538:19:HAL_PWREx_ControlStopModeVoltageScaling	16	static
 ../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c:553:10:HAL_PWREx_GetStopModeVoltageRange	4	static
-../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c:816:6:HAL_PWREx_EnterSTOPMode	24	static,ignoring_inline_asm
-../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c:939:6:HAL_PWREx_ClearPendingEvent	4	static,ignoring_inline_asm
-../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c:986:6:HAL_PWREx_EnterSTANDBYMode	16	static,ignoring_inline_asm
+../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c:816:6:HAL_PWREx_EnterSTOPMode	24	static
+../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c:939:6:HAL_PWREx_ClearPendingEvent	4	static
+../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c:986:6:HAL_PWREx_EnterSTANDBYMode	16	static
 ../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c:1081:6:HAL_PWREx_ConfigD3Domain	16	static
 ../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c:1212:6:HAL_PWREx_EnableFlashPowerDown	4	static
 ../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c:1226:6:HAL_PWREx_DisableFlashPowerDown	4	static
-../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c:1302:6:HAL_PWREx_EnableWakeUpPin	80	static,ignoring_inline_asm
+../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c:1302:6:HAL_PWREx_EnableWakeUpPin	80	static
 ../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c:1344:6:HAL_PWREx_DisableWakeUpPin	16	static
 ../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c:1369:10:HAL_PWREx_GetWakeupFlag	16	static
 ../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c:1394:19:HAL_PWREx_ClearWakeupFlag	16	static

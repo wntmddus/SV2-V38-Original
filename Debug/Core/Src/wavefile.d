@@ -58,7 +58,9 @@ Core/Src/wavefile.o: ../Core/Src/wavefile.c ../Core/Inc/parameters.h \
  ../Middlewares/Third_Party/FatFs/src/ff_gen_drv.h \
  ../Middlewares/Third_Party/FatFs/src/diskio.h \
  ../Middlewares/Third_Party/FatFs/src/ff.h ../FATFS/Target/sd_diskio.h \
- ../Algo/Inc/BLSProcess.h ../Algo/Inc/SLMCali.h ../Algo/Inc/SLMProcess.h \
+ ../Drivers/CMSIS/DSP/Include/arm_math.h \
+ ../Drivers/CMSIS/Include/cmsis_compiler.h ../Algo/Inc/BLSProcess.h \
+ ../Algo/Inc/SLMCali.h ../Algo/Inc/SLMProcess.h \
  ../Algo/Inc/define_1634HzFs.h ../Algo/Inc/EVSProcess.h \
  ../Algo/Inc/VLMCali.h ../Core/Inc/printf.h
 ../Core/Inc/parameters.h:
@@ -126,6 +128,8 @@ Core/Src/wavefile.o: ../Core/Src/wavefile.c ../Core/Inc/parameters.h \
 ../Middlewares/Third_Party/FatFs/src/diskio.h:
 ../Middlewares/Third_Party/FatFs/src/ff.h:
 ../FATFS/Target/sd_diskio.h:
+../Drivers/CMSIS/DSP/Include/arm_math.h:
+../Drivers/CMSIS/Include/cmsis_compiler.h:
 ../Algo/Inc/BLSProcess.h:
 ../Algo/Inc/SLMCali.h:
 ../Algo/Inc/SLMProcess.h:

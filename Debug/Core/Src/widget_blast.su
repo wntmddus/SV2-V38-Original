@@ -3,6 +3,6 @@
 ../Core/Src/widget_blast.c:96:6:app_widget_launch_blast	16	static
 ../Core/Src/widget_blast.c:113:6:draw_blast_static	24	static
 ../Core/Src/widget_blast.c:126:6:draw_blast_update	32	static
-../Core/Src/widget_blast.c:147:6:DrawGrid_bls	72	static
-../Core/Src/widget_blast.c:198:6:DrawInGrid_bls	96	static
-../Core/Src/widget_blast.c:221:6:ini_bls_algo	16	static
+../Core/Src/widget_blast.c:143:6:DrawGrid_bls	72	static
+../Core/Src/widget_blast.c:194:6:DrawInGrid_bls	96	static
+../Core/Src/widget_blast.c:217:6:ini_bls_algo	16	static

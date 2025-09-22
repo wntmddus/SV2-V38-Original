@@ -136,12 +136,8 @@ void draw_blast_update(float val, _BLS_OUT bls_out)	//to parameters.h
 	for (int j=1;j<4;j++)	DrawInGrid_bls(6, j, bls_out.VelocityPeakHold[j-1]);	//"VelPeak(Hold)"  //13.11
 	for (int j=1;j<4;j++)	DrawInGrid_bls(7, j, bls_out.fLmaxBLS[j-1]);	//Lmax
 	for (int j=1;j<4;j++)	DrawInGrid_bls(8, j, bls_out.LnOutBLS[j-1]);	//L10
-	
-	////time
-	//char text[16];
-	//RgbStr clr = {0x00,0x00,0x00,0xff,0xff,0xff};
-	//snprintf(text, 16, "%8.2f",val);
-	//ILI9488_WriteString(10, 270, text, Font_11x18, &clr);
+
+
 }
 
 void DrawGrid_bls(void)

@@ -158,11 +158,7 @@ void draw_evs_update(float val, _EVS_OUT evs_out)	//to parameters.h
 	//for (int j=1;j<4;j++)	DrawInGrid_evs(8, j, 0.0f);		//"L10"   //13.11
 							DrawInGrid_evs(8, 3, evs_out.LnOut[3]);		//"L10"   //13.11  -Ln is only for the vertical (z) channel
 	
-	////time
-	//char text[16];
-	//RgbStr clr = {0x00,0x00,0x00,0xff,0xff,0xff};
-	//snprintf(text, 16, "%8.2f",val);
-	//ILI9488_WriteString(10, 270, text, Font_11x18, &clr);
+
 }
 
 void DrawGrid_evs(void)

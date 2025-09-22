@@ -170,6 +170,22 @@ static void TransferCompleteMDMA(MDMA_HandleTypeDef *hmdma);
 
 /* USER CODE END 0 */
 
+// Version identifier for coefficient tracking
+const char* const COEFFICIENT_VERSION = "FAST_FREQ_CORRECTION_OPTIMIZED";
+
+// LCD refresh timer handle
+osTimerId_t lcdRefreshTimerHandle;
+
+// Timer callback function
+void lcdRefreshTimerCallback(void *argument) {
+    // 0 = EVS, 1 = BLS
+    if (g_demo_parameters.nMeasMode == 0) {
+        flag_lcd_update = 0;
+    } else if (g_demo_parameters.nMeasMode == 1) {
+        flag_lcd_update = 1;
+    }
+}
+
 /**
   * @brief  The application entry point.
   * @retval int
@@ -326,6 +342,10 @@ HAL_PWREx_EnableBkUpReg();
 
   /* creation of Task_dsp */
   Task_dspHandle = osThreadNew(StartTask01, NULL, &Task_dsp_attributes);
+
+  // Create and start LCD refresh timer (0.1s period)
+  lcdRefreshTimerHandle = osTimerNew(lcdRefreshTimerCallback, osTimerPeriodic, NULL, NULL);
+  osTimerStart(lcdRefreshTimerHandle, 100);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */

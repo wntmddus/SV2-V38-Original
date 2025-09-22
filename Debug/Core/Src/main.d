@@ -58,7 +58,9 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Middlewares/Third_Party/FatFs/src/diskio.h \
  ../Middlewares/Third_Party/FatFs/src/ff.h ../FATFS/Target/sd_diskio.h \
  ../Core/Inc/parameters.h ../Algo/Inc/define_1634HzFs.h \
- ../Algo/Inc/BLSProcess.h ../Algo/Inc/SLMCali.h ../Algo/Inc/SLMProcess.h \
+ ../Drivers/CMSIS/DSP/Include/arm_math.h \
+ ../Drivers/CMSIS/Include/cmsis_compiler.h ../Algo/Inc/BLSProcess.h \
+ ../Algo/Inc/SLMCali.h ../Algo/Inc/SLMProcess.h \
  ../Algo/Inc/define_1634HzFs.h ../Algo/Inc/EVSProcess.h \
  ../Algo/Inc/VLMCali.h
 ../Core/Inc/main.h:
@@ -126,6 +128,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../FATFS/Target/sd_diskio.h:
 ../Core/Inc/parameters.h:
 ../Algo/Inc/define_1634HzFs.h:
+../Drivers/CMSIS/DSP/Include/arm_math.h:
+../Drivers/CMSIS/Include/cmsis_compiler.h:
 ../Algo/Inc/BLSProcess.h:
 ../Algo/Inc/SLMCali.h:
 ../Algo/Inc/SLMProcess.h:

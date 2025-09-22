@@ -58,12 +58,12 @@ Core/Src/task_dsp.o: ../Core/Src/task_dsp.c ../Core/Inc/main.h \
  ../Middlewares/Third_Party/FatFs/src/ff_gen_drv.h \
  ../Middlewares/Third_Party/FatFs/src/diskio.h \
  ../Middlewares/Third_Party/FatFs/src/ff.h ../FATFS/Target/sd_diskio.h \
- ../Algo/Inc/BLSProcess.h ../Algo/Inc/SLMCali.h ../Algo/Inc/SLMProcess.h \
+ ../Drivers/CMSIS/DSP/Include/arm_math.h \
+ ../Drivers/CMSIS/Include/cmsis_compiler.h ../Algo/Inc/BLSProcess.h \
+ ../Algo/Inc/SLMCali.h ../Algo/Inc/SLMProcess.h \
  ../Algo/Inc/define_1634HzFs.h ../Algo/Inc/EVSProcess.h \
  ../Algo/Inc/VLMCali.h ../Core/Inc/ad7124.h ../Core/Inc/main.h \
  ../Core/Inc/ad7124_regs.h ../Core/Inc/ad7124.h ../Core/Inc/printf.h \
- ../Drivers/CMSIS/DSP/Include/arm_math.h \
- ../Drivers/CMSIS/Include/cmsis_compiler.h \
  ../FATFS/Target/bsp_driver_sd.h ../ads127l11/ads_core.h \
  ../ads127l11/registers.h
 ../Core/Inc/main.h:
@@ -131,6 +131,8 @@ Core/Src/task_dsp.o: ../Core/Src/task_dsp.c ../Core/Inc/main.h \
 ../Middlewares/Third_Party/FatFs/src/diskio.h:
 ../Middlewares/Third_Party/FatFs/src/ff.h:
 ../FATFS/Target/sd_diskio.h:
+../Drivers/CMSIS/DSP/Include/arm_math.h:
+../Drivers/CMSIS/Include/cmsis_compiler.h:
 ../Algo/Inc/BLSProcess.h:
 ../Algo/Inc/SLMCali.h:
 ../Algo/Inc/SLMProcess.h:
@@ -142,8 +144,6 @@ Core/Src/task_dsp.o: ../Core/Src/task_dsp.c ../Core/Inc/main.h \
 ../Core/Inc/ad7124_regs.h:
 ../Core/Inc/ad7124.h:
 ../Core/Inc/printf.h:
-../Drivers/CMSIS/DSP/Include/arm_math.h:
-../Drivers/CMSIS/Include/cmsis_compiler.h:
 ../FATFS/Target/bsp_driver_sd.h:
 ../ads127l11/ads_core.h:
 ../ads127l11/registers.h:

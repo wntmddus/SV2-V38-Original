@@ -58,11 +58,12 @@ Core/Src/widget_evs.o: ../Core/Src/widget_evs.c ../Core/Inc/parameters.h \
  ../Middlewares/Third_Party/FatFs/src/ff_gen_drv.h \
  ../Middlewares/Third_Party/FatFs/src/diskio.h \
  ../Middlewares/Third_Party/FatFs/src/ff.h ../FATFS/Target/sd_diskio.h \
- ../Algo/Inc/BLSProcess.h ../Algo/Inc/SLMCali.h ../Algo/Inc/SLMProcess.h \
+ ../Drivers/CMSIS/DSP/Include/arm_math.h \
+ ../Drivers/CMSIS/Include/cmsis_compiler.h ../Algo/Inc/BLSProcess.h \
+ ../Algo/Inc/SLMCali.h ../Algo/Inc/SLMProcess.h \
  ../Algo/Inc/define_1634HzFs.h ../Algo/Inc/EVSProcess.h \
  ../Algo/Inc/VLMCali.h ../Core/Inc/ili9488.h ../Core/Inc/fonts.h \
- ../Core/Inc/printf.h ../Drivers/CMSIS/DSP/Include/arm_math.h \
- ../Drivers/CMSIS/Include/cmsis_compiler.h
+ ../Core/Inc/printf.h
 ../Core/Inc/parameters.h:
 ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h:
 ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h:
@@ -128,6 +129,8 @@ Core/Src/widget_evs.o: ../Core/Src/widget_evs.c ../Core/Inc/parameters.h \
 ../Middlewares/Third_Party/FatFs/src/diskio.h:
 ../Middlewares/Third_Party/FatFs/src/ff.h:
 ../FATFS/Target/sd_diskio.h:
+../Drivers/CMSIS/DSP/Include/arm_math.h:
+../Drivers/CMSIS/Include/cmsis_compiler.h:
 ../Algo/Inc/BLSProcess.h:
 ../Algo/Inc/SLMCali.h:
 ../Algo/Inc/SLMProcess.h:
@@ -137,5 +140,3 @@ Core/Src/widget_evs.o: ../Core/Src/widget_evs.c ../Core/Inc/parameters.h \
 ../Core/Inc/ili9488.h:
 ../Core/Inc/fonts.h:
 ../Core/Inc/printf.h:
-../Drivers/CMSIS/DSP/Include/arm_math.h:
-../Drivers/CMSIS/Include/cmsis_compiler.h:

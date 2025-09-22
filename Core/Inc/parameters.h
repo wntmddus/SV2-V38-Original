@@ -13,6 +13,7 @@
 #include "cmsis_os.h"
 #include <define_1634HzFs.h>
 #include "fatfs.h"
+#include "arm_math.h"
 
 //algo files
 #include <BLSProcess.h>
@@ -198,6 +199,9 @@ void app_widget_launch_leq(uint8_t);
 
 
 extern int draw_file_name;
+
+// Low-frequency stability variables
+
 void draw_rec_time(int sec);
 void set_rec_button(void);
 void refresh_system_time(void);

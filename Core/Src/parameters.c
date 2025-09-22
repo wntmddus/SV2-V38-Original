@@ -127,6 +127,9 @@ short flag_arm_rec=0;		//0-arming mode
 short g_flagCalibr=0;        //0-no Calibration
 short g_flagCalibrChan=0;     //0-number of channel  //kt25
 
+// Low-frequency stability variables
+
+
 
 /*
  * \brief Commit demo parameters.

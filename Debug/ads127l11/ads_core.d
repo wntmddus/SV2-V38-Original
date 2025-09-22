@@ -59,7 +59,9 @@ ads127l11/ads_core.o: ../ads127l11/ads_core.c ../ads127l11/ads_core.h \
  ../Middlewares/Third_Party/FatFs/src/ff_gen_drv.h \
  ../Middlewares/Third_Party/FatFs/src/diskio.h \
  ../Middlewares/Third_Party/FatFs/src/ff.h ../FATFS/Target/sd_diskio.h \
- ../Algo/Inc/BLSProcess.h ../Algo/Inc/SLMCali.h ../Algo/Inc/SLMProcess.h \
+ ../Drivers/CMSIS/DSP/Include/arm_math.h \
+ ../Drivers/CMSIS/Include/cmsis_compiler.h ../Algo/Inc/BLSProcess.h \
+ ../Algo/Inc/SLMCali.h ../Algo/Inc/SLMProcess.h \
  ../Algo/Inc/define_1634HzFs.h ../Algo/Inc/EVSProcess.h \
  ../Algo/Inc/VLMCali.h
 ../ads127l11/ads_core.h:
@@ -129,6 +131,8 @@ ads127l11/ads_core.o: ../ads127l11/ads_core.c ../ads127l11/ads_core.h \
 ../Middlewares/Third_Party/FatFs/src/diskio.h:
 ../Middlewares/Third_Party/FatFs/src/ff.h:
 ../FATFS/Target/sd_diskio.h:
+../Drivers/CMSIS/DSP/Include/arm_math.h:
+../Drivers/CMSIS/Include/cmsis_compiler.h:
 ../Algo/Inc/BLSProcess.h:
 ../Algo/Inc/SLMCali.h:
 ../Algo/Inc/SLMProcess.h:
